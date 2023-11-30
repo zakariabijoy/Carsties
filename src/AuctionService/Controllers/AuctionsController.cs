@@ -52,4 +52,26 @@ public class AuctionsController : ControllerBase
 
         return CreatedAtAction(nameof(GetAuctionsById), new {auction.Id}, _mapper.Map<AuctionDto>(auction));
     }
+
+    [HttpPut("{id}")]
+    public async Task<ActionResult> updateAuction(Guid id, UpdateAuctionDto updateAuctionDto)
+    {
+        var auction = await _context.Auctions.Include(a => a.Item).FirstOrDefaultAsync(a => a.Id == id);
+
+        if(auction == null) return  NotFound();
+
+        // TOD0: checkseller == username
+
+        auction.Item.Make = updateAuctionDto.Make ?? auction.Item.Make;
+        auction.Item.Model = updateAuctionDto.Model ?? auction.Item.Model;
+        auction.Item.Color = updateAuctionDto.Color ?? auction.Item.Color;
+        auction.Item.Mileage = updateAuctionDto.Mileage ?? auction.Item.Mileage;
+        auction.Item.Year = updateAuctionDto.Year ?? auction.Item.Year;
+
+        var result = await _context.SaveChangesAsync() > 0;
+
+        if(result) return Ok();
+
+        return BadRequest("Problem saving changes");
+    }
 }
