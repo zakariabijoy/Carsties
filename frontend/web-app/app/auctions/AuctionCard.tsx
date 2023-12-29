@@ -1,4 +1,5 @@
 import Image from "next/image"
+import CountdownTimer from "./CountdownTimer"
 
 type Props ={
     auction: any
@@ -17,6 +18,9 @@ export default function AuctionCard({auction} : Props) {
                     sizes="(max-width:768) 100vw, (max-width:1200px) 50vw, 25vw"
                     priority
                 />
+                <div className="absolute bottom-0 left-2">
+                    <CountdownTimer auctionEnd={auction.auctionEnd}/>
+                </div>
             </div>
         </div>
         <div className="flex justify-between items-center mt-4">
