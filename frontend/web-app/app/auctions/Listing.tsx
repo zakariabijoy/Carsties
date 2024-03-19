@@ -8,18 +8,33 @@ import Filters from "./Filters";
 import { useParamsStore } from "@/hooks/useParamsStore";
 import qs from "query-string";
 import EmptyFilter from "../components/EmptyFilter";
+import { useAuctionStore } from "@/hooks/useAuctionStore";
+import { shallow } from "zustand/shallow";
+import { useShallow } from "zustand/react/shallow";
 
 export default function Listing() {
-  const [data, setData] = useState<PagedResult<Auction>>();
-  const params = useParamsStore((state) => ({
-    pageNumber: state.pageNumber,
-    pageSize: state.pageSize,
-    searchTerm: state.searchTerm,
-    orderBy: state.orderBy,
-    filterBy: state.filterBy,
-    seller: state.seller,
-    winner: state.winner
-  }));
+  const [loading, setLoading] = useState(true);
+  const params = useParamsStore(
+    useShallow((state) => ({
+      pageNumber: state.pageNumber,
+      pageSize: state.pageSize,
+      searchTerm: state.searchTerm,
+      orderBy: state.orderBy,
+      filterBy: state.filterBy,
+      seller: state.seller,
+      winner: state.winner,
+    }))
+  );
+
+  const data = useAuctionStore(
+    useShallow((state) => ({
+      auctions: state.auctions,
+      totalCount: state.totalCount,
+      pageCount: state.pageCount,
+    }))
+  );
+
+  const setData = useAuctionStore((state) => state.setData);
 
   const setParams = useParamsStore((state) => state.setParams);
   const url = qs.stringifyUrl({ url: "", query: params });
@@ -31,10 +46,11 @@ export default function Listing() {
   useEffect(() => {
     getData(url).then((data) => {
       setData(data);
+      setLoading(false);
     });
   }, [url]);
 
-  if (!data) return <p>Loading...</p>;
+  if (loading) return <p>Loading...</p>;
 
   return (
     <>
@@ -44,7 +60,7 @@ export default function Listing() {
       ) : (
         <>
           <div className="grid grid-cols-4 gap-6">
-            {data.results.map((auction: any) => (
+            {data.auctions.map((auction: any) => (
               <AuctionCard auction={auction} key={auction.id} />
             ))}
           </div>
