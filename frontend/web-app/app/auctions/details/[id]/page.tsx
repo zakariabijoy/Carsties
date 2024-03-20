@@ -1,4 +1,7 @@
-import { getDetailedViewData } from "@/app/actions/auctionAction";
+import {
+  getBidsForAuction,
+  getDetailedViewData,
+} from "@/app/actions/auctionAction";
 import Heading from "@/app/components/Heading";
 import React from "react";
 import CountdownTimer from "../../CountdownTimer";
@@ -11,7 +14,8 @@ import DeleteButton from "./DeleteButton";
 export default async function Details({ params }: { params: { id: string } }) {
   const data = await getDetailedViewData(params.id);
   const user = await getCurrentuser();
-
+  const bids = await getBidsForAuction(params.id);
+  console.log(bids);
   return (
     <div>
       <div className="flex justify-between">
@@ -36,6 +40,11 @@ export default async function Details({ params }: { params: { id: string } }) {
         </div>
         <div className="border-2 rounded-lg p-2 bg-gray-100">
           <Heading title="Bids" />
+          {bids.map((bid) => (
+            <p key={bid.id}>
+              {bid.bidder} - {bid.amount}
+            </p>
+          ))}
         </div>
       </div>
 
