@@ -2,14 +2,12 @@
 import AuctionCard from "./AuctionCard";
 import AppPagination from "../components/AppPagination";
 import { useEffect, useState } from "react";
-import { Auction, PagedResult } from "@/types";
 import { getData } from "../actions/auctionAction";
 import Filters from "./Filters";
 import { useParamsStore } from "@/hooks/useParamsStore";
 import qs from "query-string";
 import EmptyFilter from "../components/EmptyFilter";
 import { useAuctionStore } from "@/hooks/useAuctionStore";
-import { shallow } from "zustand/shallow";
 import { useShallow } from "zustand/react/shallow";
 
 export default function Listing() {
