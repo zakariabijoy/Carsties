@@ -2,12 +2,14 @@
 
 import { useAuctionStore } from "@/hooks/useAuctionStore";
 import { useBidStore } from "@/hooks/useBidStore";
-import { Auction, Bid } from "@/types";
+import { Auction, AuctionFinished, Bid } from "@/types";
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 import { User } from "next-auth";
 import React, { ReactNode, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import AuctionCreatedToast from "../components/AuctionCreatedToast";
+import { getDetailedViewData } from "../actions/auctionAction";
+import AuctionFinishedToast from "../components/AuctionFinishedToast";
 
 type Props = {
   children: ReactNode;
@@ -51,6 +53,25 @@ export default function SignalRProvider({ children, user }: Props) {
           });
         })
         .catch((err) => console.log(err));
+
+      connection.on("AuctionFinished", (finishedAuction: AuctionFinished) => {
+        console.log("Auction finished event received");
+        const auction = getDetailedViewData(finishedAuction.auctionId);
+        return toast.promise(
+          auction,
+          {
+            loading: "Loading",
+            success: (auction) => (
+              <AuctionFinishedToast
+                finishedAuction={finishedAuction}
+                auction={auction}
+              />
+            ),
+            error: (err) => "Auction finished!",
+          },
+          { success: { duration: 10000, icon: null } }
+        );
+      });
     }
 
     return () => {
