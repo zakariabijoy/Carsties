@@ -1,3 +1,9 @@
+networks:
+  custom:
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+
 services:
   postgres:
     image: postgres
@@ -7,6 +13,8 @@ services:
       - 5433:5432
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      custom:
   mongodb:
     image: mongo
     environment:
@@ -16,11 +24,15 @@ services:
       - 27017:27017
     volumes:
       - mongodata:/var/lib.mongodb/data
+    networks:
+      custom:
   rabbitmq:
     image: rabbitmq:3-management-alpine
     ports:
       - 5672:5672
       - 15672:15672
+    networks:
+      custom:
   auction-svc:
     image: zakariabijoy/auction-svc:latest
     build:
@@ -43,6 +55,8 @@ services:
     depends_on:
       - rabbitmq
       - postgres
+    networks:
+      custom:
   search-svc:
     image: zakariabijoy/search-svc:latest
     build:
@@ -59,6 +73,8 @@ services:
     depends_on:
       - rabbitmq
       - mongodb
+    networks:
+      custom:
   identity-svc:
     image: zakariabijoy/identity-svc:latest
     build:
@@ -72,6 +88,9 @@ services:
       - 80:80
     depends_on:
       - postgres
+    networks:
+      custom:
+        ipv4_address: 10.5.0.200
   gateway-svc:
     image: zakariabijoy/gateway-svc:latest
     build:
@@ -82,6 +101,8 @@ services:
       - ASPNETCORE_URLS=http://+:80
     ports:
       - 6001:80
+    networks:
+      custom:
   bid-svc:
     image: zakariabijoy/bid-svc:latest
     build:
@@ -99,6 +120,8 @@ services:
     depends_on:
       - rabbitmq
       - mongodb
+    networks:
+      custom:
   notify-svc:
     image: zakariabijoy/notify-svc:latest
     build:
@@ -112,6 +135,8 @@ services:
       - 7004:80
     depends_on:
       - rabbitmq
+    networks:
+      custom:
   web-app:
     image: zakariabijoy/web-app
     build:
@@ -122,7 +147,7 @@ services:
     ports:
       - 3000:3000
     extra_hosts:
-      - id.carsties.com:172.18.0.2
+      - id.carsties.com:10.5.0.200
     environment:
       - NEXTAUTH_SECRET=somethingreallyreallysecret
       - NEXTAUTH_URL=http://localhost:3000
@@ -130,6 +155,8 @@ services:
       - API_URL=http://gateway-svc/
       - ID_URL=http://id.carsties.com
       - NEXT_PUBLIC_NOTIFY_URL=http://gateway-svc/notifications
+    networks:
+      custom:
 volumes:
   pgdata:
   mongodata:
