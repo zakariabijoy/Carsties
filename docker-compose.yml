@@ -161,8 +161,10 @@ services:
     image: nginxproxy/nginx-proxy
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./devcerts:/etc/nginx/certs
     networks:
       custom:
 volumes:
