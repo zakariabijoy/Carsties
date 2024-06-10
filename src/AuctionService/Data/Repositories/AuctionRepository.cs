@@ -18,7 +18,7 @@ public class AuctionRepository : IAuctionRepository
         _mapper = mapper;
     }
 
-    public async Task AddAuction(Auction auction)
+    public async Task AddAuctionAsync(Auction auction)
     {
         await _dbContext.Auctions.AddAsync(auction);
     }

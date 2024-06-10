@@ -1,4 +1,5 @@
 using AuctionService.Data;
+using AuctionService.Data.Repositories;
 using AuctionService.DTOs;
 using AuctionService.Entities;
 using AutoMapper;
@@ -15,38 +16,31 @@ namespace AuctionService.Controllers;
 [Route("api/[controller]")]
 public class AuctionsController : ControllerBase
 {
-    private readonly AuctionDbContext _context;
+    private readonly IAuctionRepository _auctionRepository;
     private readonly IMapper _mapper;
     private readonly IPublishEndpoint _publishEndpoint;
 
-    public AuctionsController(AuctionDbContext context, IMapper mapper,  IPublishEndpoint publishEndpoint )
+    public AuctionsController(IAuctionRepository auctionRepository, IMapper mapper,  IPublishEndpoint publishEndpoint )
     {
-            _publishEndpoint = publishEndpoint;
-            _mapper = mapper;
-            _context = context;
+        _publishEndpoint = publishEndpoint;
+        _auctionRepository = auctionRepository;
+        _mapper = mapper;
     }
 
     [HttpGet]
     public async Task<ActionResult<List<AuctionDto>>> GetAllAuctions(string date)
     {
-        var query = _context.Auctions.OrderBy(a => a.Item.Make).AsQueryable();
-
-        if(!string.IsNullOrEmpty(date))
-        {
-            query =  query.Where(a => a.UpdatedAt.CompareTo(DateTime.Parse(date).ToUniversalTime()) > 0);
-        }
-        
-        return await query.ProjectTo<AuctionDto>(_mapper.ConfigurationProvider).ToListAsync();
+        return await _auctionRepository.GetAuctionsAsync(date);
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<AuctionDto>> GetAuctionsById(Guid id)
     {
-        var auction = await _context.Auctions.Include(a => a.Item).OrderBy(a => a.Item.Make).FirstOrDefaultAsync(a => a.Id == id);
+        var auction = await _auctionRepository.GetAuctionByIdAsync(id);
 
         if(auction is null) return NotFound();
 
-        return _mapper.Map<AuctionDto>(auction);
+        return auction;
     }
 
     [Authorize]
@@ -57,13 +51,13 @@ public class AuctionsController : ControllerBase
 
         auction.Seller = User.Identity.Name;
 
-        _context.Auctions.Add(auction);
+        await _auctionRepository.AddAuctionAsync(auction);  
 
         var newAuction = _mapper.Map<AuctionDto>(auction);
 
         await _publishEndpoint.Publish(_mapper.Map<AuctionCreated>(newAuction));
 
-        var result = await _context.SaveChangesAsync() > 0;
+        var result = await _auctionRepository.SaveChangesAsync();
 
         if(!result) return BadRequest("Could not save changes to the DB");
 
@@ -74,7 +68,7 @@ public class AuctionsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult> updateAuction(Guid id, UpdateAuctionDto updateAuctionDto)
     {
-        var auction = await _context.Auctions.Include(a => a.Item).FirstOrDefaultAsync(a => a.Id == id);
+        var auction = await _auctionRepository.GetAuctionEntityByIdAsync(id);
 
         if(auction == null) return  NotFound();
 
@@ -88,7 +82,7 @@ public class AuctionsController : ControllerBase
 
         await _publishEndpoint.Publish(_mapper.Map<AuctionUpdated>(auction));
         
-        var result = await _context.SaveChangesAsync() > 0;
+        var result = await _auctionRepository.SaveChangesAsync();
 
         if(result) return Ok();
 
@@ -99,17 +93,17 @@ public class AuctionsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteAuction(Guid id)
     {
-        var auction = await _context.Auctions.FindAsync(id);
+        var auction = await _auctionRepository.GetAuctionEntityByIdAsync(id);
 
         if(auction == null) return  NotFound();
 
         if(auction.Seller != User.Identity.Name) return Forbid();
 
-        _context.Auctions.Remove(auction);
+        _auctionRepository.RemoveAuction(auction);
 
         await _publishEndpoint.Publish<AuctionDeleted>(new {Id = auction.Id.ToString()});
 
-        var result = await _context.SaveChangesAsync() > 0;
+        var result = await _auctionRepository.SaveChangesAsync();
 
         if(result) return Ok();
 

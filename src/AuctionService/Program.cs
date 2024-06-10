@@ -1,5 +1,6 @@
 using AuctionService.Consumers;
 using AuctionService.Data;
+using AuctionService.Data.Repositories;
 using AuctionService.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -54,6 +55,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 });
 
 builder.Services.AddGrpc();
+
+builder.Services.AddScoped<IAuctionRepository, AuctionRepository>();
 
 var app = builder.Build();
 
