@@ -21,9 +21,7 @@ public class CustomWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetim
     {
         builder.ConfigureTestServices(services => 
         {
-            var descriptor = services.SingleOrDefault(x => x.ServiceType == typeof(DbContextOptions<AuctionDbContext>));
-
-            if(descriptor != null) services.Remove(descriptor);
+            services.RemoveDbContext<AuctionDbContext>();
 
             services.AddDbContext<AuctionDbContext>(options => 
             {
@@ -32,13 +30,7 @@ public class CustomWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetim
 
             services.AddMassTransitTestHarness();
 
-            var sp = services.BuildServiceProvider();
-
-            using var scope = sp.CreateScope();
-            var scopedServices = scope.ServiceProvider;
-            var db = scopedServices.GetRequiredService<AuctionDbContext>();
-
-            db.Database.Migrate();
+            services.EnsureCreated<AuctionDbContext>();
         });
     }
     Task IAsyncLifetime.DisposeAsync() => _postgreSqlContainer.DisposeAsync().AsTask();
