@@ -35,6 +35,7 @@ try
 
     app.Run();
 }
+
 catch (Exception ex) when (
                             // https://github.com/dotnet/runtime/issues/60600
                             ex.GetType().Name is not "StopTheHostException"
