@@ -19,3 +19,10 @@ spec:
               value: b21525
           ports:
             - containerPort: 5432
+          volumeMounts:
+            - mountPath: /var/data/postgres
+              name: postgresdata
+      volumes:
+        - name: postgresdata
+          persistentVolumeClaim:
+            claimName: postgres-claim
