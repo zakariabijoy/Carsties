@@ -5,6 +5,7 @@ using IdentityService.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Duende.IdentityServer.Services;
 
 namespace IdentityService;
 
